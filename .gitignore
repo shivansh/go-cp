@@ -1,0 +1,6 @@
+# Ignore test/generated files
+src.txt
+dst.txt
+
+# Ignore binaries
+go-cp
