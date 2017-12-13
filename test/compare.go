@@ -10,7 +10,7 @@ import (
 // Checks if the files passed as arguments have same contents.
 func Compare(file1, file2 string) bool {
 	// Minimum granularity (in bytes) at which the files are compared.
-	chunk_size := 1024
+	chunkSize := 1024
 
 	// Compare file sizes.
 	f1stat, err := os.Stat(file1)
@@ -41,10 +41,10 @@ func Compare(file1, file2 string) bool {
 
 	// Compare file contents chunk-by-chunk.
 	for {
-		chunk1 := make([]byte, chunk_size)
+		chunk1 := make([]byte, chunkSize)
 		_, err1 := f1.Read(chunk1)
 
-		chunk2 := make([]byte, chunk_size)
+		chunk2 := make([]byte, chunkSize)
 		_, err2 := f2.Read(chunk2)
 
 		if err1 != nil || err2 != nil {
