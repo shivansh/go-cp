@@ -13,12 +13,12 @@ func Compare(file1, file2 string) bool {
 	chunkSize := 1024
 
 	// Compare file sizes.
-	f1stat, err := os.Stat(file1)
+	f1stat, err := os.Lstat(file1)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	f2stat, err := os.Stat(file2)
+	f2stat, err := os.Lstat(file2)
 	if err != nil {
 		log.Fatal(err)
 	}
