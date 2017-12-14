@@ -26,26 +26,15 @@ func main() {
 	dstStat, err := os.Stat(dst)
 	if err == nil {
 		if dstStat.IsDir() {
-			// TODO Validate if recursive copying is the,
+			// TODO Validate if recursive copying is the
 			// intended behavior, for e.g. via '-r' option.
-			if dst[len(dst) - 1] != '/' {
-				dst += "/"
-			}
-
 			if srcStat.IsDir() {
-				files, err := ioutil.ReadDir(src)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				for _, f := range files {
-					Copy(src + "/" + f.Name(), dst + f.Name())
-				}
+				CopyDir(src, dst)
 			} else {
-				Copy(src, dst + src)
+				CopyFile(src, dst + src)
 			}
 		} else if !srcStat.IsDir() {
-			Copy(src, dst)
+			CopyFile(src, dst)
 		} else {
 			log.Fatalf("Omitting directory '%s'", dst)
 		}
@@ -55,24 +44,32 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			files, err := ioutil.ReadDir(src)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			for _, f := range files {
-				Copy(src + "/" + f.Name(), dst + "/" + f.Name())
-			}
+			CopyDir(src, dst)
 		} else {
-			Copy(src, dst)
+			CopyFile(src, dst)
 		}
 	} else {
 		log.Fatal(err)
 	}
 }
 
-func Copy(src, dst string) {
+// Copies all the files from directory 'src' to directory 'dst'.
+func CopyDir(src, dst string) {
+	src = CheckTrailingSlash(src)
+	dst = CheckTrailingSlash(dst)
+
+	files, err := ioutil.ReadDir(src)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		CopyFile(src + f.Name(), dst + f.Name())
+	}
+}
+
+// Copies the contents of file 'src' to file 'dst'.
+func CopyFile(src, dst string) {
 	from, err := os.Open(src)
 	if err != nil {
 		log.Fatal(err)
@@ -89,4 +86,13 @@ func Copy(src, dst string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// In case the argument is a directory, checks the
+// presence of trailing slash and appends one if absent.
+func CheckTrailingSlash(dir string) string {
+	if dir[len(dir) - 1] != '/' {
+		dir += "/"
+	}
+	return dir
 }
