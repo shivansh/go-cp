@@ -29,12 +29,21 @@ func main() {
 			// TODO Validate if recursive copying is the
 			// intended behavior, for e.g. via '-r' option.
 			if srcStat.IsDir() {
-				CopyDir(src, dst)
+				err := CopyDir(src, dst)
+				if err != nil {
+					log.Fatal(err)
+				}
 			} else {
-				CopyFile(src, dst + src)
+				err := CopyFile(src, dst + src)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		} else if !srcStat.IsDir() {
-			CopyFile(src, dst)
+			err := CopyFile(src, dst)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
 			log.Fatalf("Omitting directory '%s'", dst)
 		}
@@ -44,32 +53,42 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			CopyDir(src, dst)
+			err = CopyDir(src, dst)
+			if err != nil {
+				log.Fatal(err)
+			}
 		} else {
-			CopyFile(src, dst)
+			err := CopyFile(src, dst)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	} else {
 		log.Fatal(err)
 	}
 }
 
-// Copies all the files from directory 'src' to directory 'dst'.
-func CopyDir(src, dst string) {
+// CopyDir copies all the files from directory 'src' to directory 'dst'.
+func CopyDir(src, dst string) error {
 	src = CheckTrailingSlash(src)
 	dst = CheckTrailingSlash(dst)
 
 	files, err := ioutil.ReadDir(src)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, f := range files {
-		CopyFile(src + f.Name(), dst + f.Name())
+		err := CopyFile(src + f.Name(), dst + f.Name())
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-// Copies the contents of file 'src' to file 'dst'.
-func CopyFile(src, dst string) {
+// CopyFile copies the contents of file 'src' to file 'dst'.
+func CopyFile(src, dst string) error {
 	from, err := os.Open(src)
 	if err != nil {
 		log.Fatal(err)
@@ -78,18 +97,19 @@ func CopyFile(src, dst string) {
 
 	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer to.Close()
 
 	_, err = io.Copy(to, from)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return to.Close()  // TODO from.close() ?
 }
 
-// In case the argument is a directory, checks the
-// presence of trailing slash and appends one if absent.
+// CheckTrailingSlash checks the presence of trailing slash in
+// case the argument is a directory, and appends on if absent.
 func CheckTrailingSlash(dir string) string {
 	if dir[len(dir) - 1] != '/' {
 		dir += "/"

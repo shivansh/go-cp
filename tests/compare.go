@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// Checks if the files passed as arguments have same contents.
+// Compare checks if the files passed as arguments have same contents.
 func Compare(file1, file2 string) bool {
 	// Minimum granularity (in bytes) at which the files are compared.
 	chunkSize := 1024
