@@ -44,6 +44,11 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+		} else if !srcStat.Mode().IsRegular() {
+			// Cannot copy non-regular files apart from
+			// directories (e.g. symlinks, devices etc.)
+			log.Fatalf("Ignoring non-regular source file %s (%q)",
+				   dstStat.Name(), dstStat.Mode().String())
 		} else {
 			log.Fatalf("Omitting directory '%s'", dst)
 		}
@@ -68,7 +73,8 @@ func main() {
 	}
 }
 
-// CopyDir copies all the files from directory 'src' to directory 'dst'.
+// CopyDir recursively copies all the files from the
+// directory named 'src' to the directory named 'dst'.
 func CopyDir(src, dst string) error {
 	src = CheckTrailingSlash(src)
 	dst = CheckTrailingSlash(dst)
@@ -79,15 +85,34 @@ func CopyDir(src, dst string) error {
 	}
 
 	for _, f := range files {
-		err := CopyFile(src + f.Name(), dst + f.Name())
+		srcStat, err := os.Stat(src + f.Name())
 		if err != nil {
 			return err
+		}
+		if srcStat.IsDir() {
+			_, err := os.Stat(dst + f.Name())
+			if os.IsNotExist(err) {
+				err := os.Mkdir(dst + f.Name(), os.ModePerm)
+				if err != nil {
+					log.Fatal(err)
+				}
+			} else if err != nil {
+				log.Fatal(err)
+			}
+			err = CopyDir(src + f.Name(), dst + f.Name())
+		} else if srcStat.Mode().IsRegular() {
+			err = CopyFile(src + f.Name(), dst + f.Name())
+		} else {
+			log.Fatalf("Ignoring non-regular source file %s (%q)",
+				   srcStat.Name(), srcStat.Mode().String())
 		}
 	}
 	return nil
 }
 
-// CopyFile copies the contents of file 'src' to file 'dst'.
+// CopyFile copies the contents of file named 'src' to the file named 'dst'.
+// The destination file will be created if it does not exist. If it already
+// exists, then its contents will be replaced by the contents of source file.
 func CopyFile(src, dst string) error {
 	from, err := os.Open(src)
 	if err != nil {
@@ -95,13 +120,18 @@ func CopyFile(src, dst string) error {
 	}
 	defer from.Close()
 
-	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
+	to, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
 	defer to.Close()
 
 	_, err = io.Copy(to, from)
+	if err != nil {
+		return err
+	}
+
+	err = to.Sync()
 	if err != nil {
 		return err
 	}
