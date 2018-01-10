@@ -68,7 +68,7 @@ func CompareDir(dir1, dir2 string) bool {
 // Compare checks if the files passed as arguments have same content.
 func CompareFile(file1, file2 string) bool {
 	// Minimum granularity (in bytes) at which the files are compared.
-	chunkSize := 1024
+	chunkSize := 32 * 1024
 
 	// Compare file sizes.
 	f1stat, err := os.Lstat(file1)
