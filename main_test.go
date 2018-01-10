@@ -4,18 +4,26 @@ import (
 	"log"
 	"os"
 	"testing"
-	"go-cp/test"
+	"go-cp/tests"
 )
 
 func setup() {
-	err := os.Mkdir("tests/dstdir", os.ModePerm)
+	err := os.MkdirAll("tests/srcdir/a", os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = os.Create("tests/srcdir/b")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = os.Mkdir("tests/dstdir", os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func teardown() {
-	err := os.RemoveAll("tests/dstfile")
+	err := os.RemoveAll("tests/srcdir")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,7 +66,7 @@ func TestCopyFile(t *testing.T) {
 		wantErr bool
 	}{{
 		name: "TextFile",
-		args: args{"tests/srcfile", "tests/dstfile"},
+		args: args{"tests/srcdir/b", "tests/dstdir/b"},
 		wantErr: false,
 	},
 	}

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"go-cp/utils"
 )
 
 func main() {
@@ -76,8 +77,8 @@ func main() {
 // CopyDir recursively copies all the files from the
 // directory named 'src' to the directory named 'dst'.
 func CopyDir(src, dst string) error {
-	src = CheckTrailingSlash(src)
-	dst = CheckTrailingSlash(dst)
+	src = util.CheckTrailingSlash(src)
+	dst = util.CheckTrailingSlash(dst)
 
 	files, err := ioutil.ReadDir(src)
 	if err != nil {
@@ -131,18 +132,10 @@ func CopyFile(src, dst string) error {
 		return err
 	}
 
+	// Flush to disk.
 	err = to.Sync()
 	if err != nil {
 		return err
 	}
 	return to.Close()  // TODO from.close() ?
-}
-
-// CheckTrailingSlash checks the presence of trailing slash in
-// case the argument is a directory, and appends on if absent.
-func CheckTrailingSlash(dir string) string {
-	if dir[len(dir) - 1] != '/' {
-		dir += "/"
-	}
-	return dir
 }
