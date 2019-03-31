@@ -85,24 +85,27 @@ func CopyDir(src, dst string) error {
 		return err
 	}
 
+	var f1, f2 string
 	for _, f := range files {
-		srcStat, err := os.Stat(src + f.Name())
+		f1 = src + f.Name()
+		f2 = dst + f.Name()
+		srcStat, err := os.Stat(f1)
 		if err != nil {
 			return err
 		}
 		if srcStat.IsDir() {
-			_, err := os.Stat(dst + f.Name())
+			_, err := os.Stat(f2)
 			if os.IsNotExist(err) {
-				err := os.Mkdir(dst + f.Name(), os.ModePerm)
+				err := os.Mkdir(f2, os.ModePerm)
 				if err != nil {
 					log.Fatal(err)
 				}
 			} else if err != nil {
 				log.Fatal(err)
 			}
-			err = CopyDir(src + f.Name(), dst + f.Name())
+			err = CopyDir(f1, f2)
 		} else if srcStat.Mode().IsRegular() {
-			err = CopyFile(src + f.Name(), dst + f.Name())
+			err = CopyFile(f1, f2)
 		} else {
 			log.Fatalf("Ignoring non-regular source file %s (%q)",
 				   srcStat.Name(), srcStat.Mode().String())
